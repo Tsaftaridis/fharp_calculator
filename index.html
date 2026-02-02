@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDT Bleeding Risk Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        
+        .calculator {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .help-text {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .toggle-btn:hover {
+            border-color: #3498db;
+        }
+        
+        .toggle-btn.active {
+            background: #3498db;
+            border-color: #3498db;
+            color: white;
+        }
+        
+        .result {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result.low {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+        
+        .result.medium {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        
+        .result.high {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .risk-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .risk-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .risk-description {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        
+        .disclaimer {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #856404;
+        }
+        
+        .disclaimer strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .model-info {
+            margin-top: 20px;
+            padding: 16px;
+            background: #e8f4f8;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #0c5460;
+        }
+        
+        .model-info summary {
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .model-info table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        
+        .model-info td, .model-info th {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #bee5eb;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>F-HARP Major Bleeding Risk Assessment Model</h1>
+    <p class="subtitle">Following Catheter-Directed Thrombolysis for Pulmonary Embolism</p>
+    
+    <div class="calculator">
+        <div class="input-group">
+            <label>Female Patient</label>
+            <div class="toggle-group">
+                <button type="button" class="toggle-btn" data-field="sex" data-value="0">No</button>
+                <button type="button" class="toggle-btn" data-field="sex" data-value="1">Yes</button>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>Hypertension History</label>
+            <div class="toggle-group">
+                <button type="button" class="toggle-btn" data-field="htn" data-value="0">No</button>
+                <button type="button" class="toggle-btn" data-field="htn" data-value="1">Yes</button>
+            </div>
+            <p class="help-text">History of hypertension</p>
+        </div>
+
+        <div class="input-group">
+            <label for="age">Age (years)</label>
+            <input type="number" id="age" min="18" max="100" placeholder="Enter age">
+        </div>
+        
+        <div class="input-group">
+            <label>Pulmonary Embolism Risk Category</label>
+            <div class="toggle-group">
+                <button type="button" class="toggle-btn" data-field="highRisk" data-value="0">Intermediate or Low</button>
+                <button type="button" class="toggle-btn" data-field="highRisk" data-value="1">High</button>
+            </div>
+            <p class="help-text">High-risk = hemodynamic instability per <a href="https://academic.oup.com/eurheartj/article/41/4/543/5556136" target="_blank" rel="noopener">2019 ESC Guidelines</a>: cardiac arrest; obstructive shock (SBP &lt;90 mmHg or vasopressors required despite adequate filling, with end-organ hypoperfusion); or persistent hypotension (SBP &lt;90 mmHg or drop ≥40 mmHg for &gt;15 min, not from arrhythmia, hypovolemia, or sepsis)</p>
+        </div>
+        
+        <div id="result" class="result">
+            <div class="risk-value" id="riskValue">--</div>
+            <div class="risk-label" id="riskLabel">--</div>
+            <div class="risk-description" id="riskDescription"></div>
+        </div>
+    </div>
+    
+    <div class="disclaimer">
+        <strong>⚠️ Important Notice</strong>
+        This calculator has not been externally validated and should not be used to guide clinical decisions until further notice. 
+        It is intended for educational and research purposes only. Consider the individual patient context to make clinical decisions.
+    </div>
+    
+    <details class="model-info">
+        <summary>Model Information</summary>
+        <p>4-Variable Logistic Regression Model (Bootstrap-Validated)</p>
+        <table>
+            <tr><th>Variable</th><th>Coefficient</th><th>Odds Ratio</th></tr>
+            <tr><td>Intercept</td><td>-3.042</td><td>--</td></tr>
+            <tr><td>Female Sex</td><td>0.246</td><td>1.28</td></tr>
+            <tr><td>Hypertension</td><td>0.232</td><td>1.26</td></tr>
+            <tr><td>Age (per SD)</td><td>0.557</td><td>1.75</td></tr>
+            <tr><td>High-Risk PE</td><td>0.200</td><td>1.22</td></tr>
+        </table>
+        <p style="margin-top: 10px;">Age standardization: Mean = 60.7 years, SD = 14.5 years</p>
+    </details>
+    
+    <footer>
+        F-HARP Bleeding Risk Assessment Model
+    </footer>
+    
+    <script>
+        // Model coefficients from model_coefficients_k4_20260117_152530.csv
+        const MODEL = {
+            intercept: -3.041540224580839,
+            coefficients: {
+                age: 0.5568773176180759,      // Standardized age
+                highRisk: 0.1995521172847331,
+                htn: 0.23223507266367874,
+                sex: 0.24560976844033502
+            },
+            // Age standardization parameters (from training data)
+            ageMean: 60.7,
+            ageSD: 14.5
+        };
+        
+        // Selected values
+        const selections = {
+            highRisk: null,
+            htn: null,
+            sex: null
+        };
+        
+        // Handle toggle button clicks
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const field = this.dataset.field;
+                const value = parseInt(this.dataset.value);
+                
+                // Update selection
+                selections[field] = value;
+                
+                // Update UI
+                document.querySelectorAll(`[data-field="${field}"]`).forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Auto-calculate
+                tryCalculateRisk();
+            });
+        });
+        
+        // Auto-calculate when age changes
+        document.getElementById('age').addEventListener('input', function() {
+            tryCalculateRisk();
+        });
+        
+        // Try to calculate (only if all inputs are filled)
+        function tryCalculateRisk() {
+            const age = parseFloat(document.getElementById('age').value);
+            
+            // Only calculate if all inputs are valid
+            if (isNaN(age) || age < 18 || age > 100) {
+                return;
+            }
+            if (selections.highRisk === null || selections.htn === null || selections.sex === null) {
+                return;
+            }
+            
+            calculateRisk();
+        }
+        
+        function calculateRisk() {
+            const age = parseFloat(document.getElementById('age').value);
+            
+            // Validate inputs (for manual button click)
+            if (isNaN(age) || age < 18 || age > 100) {
+                return;
+            }
+            if (selections.highRisk === null || selections.htn === null || selections.sex === null) {
+                return;
+            }
+            
+            // Standardize age
+            const ageStd = (age - MODEL.ageMean) / MODEL.ageSD;
+            
+            // Calculate log-odds
+            const logOdds = MODEL.intercept +
+                MODEL.coefficients.age * ageStd +
+                MODEL.coefficients.highRisk * selections.highRisk +
+                MODEL.coefficients.htn * selections.htn +
+                MODEL.coefficients.sex * selections.sex;
+            
+            // Convert to probability
+            const probability = 1 / (1 + Math.exp(-logOdds));
+            const riskPercent = (probability * 100).toFixed(1);
+            
+            // Determine risk category
+            // Note: Model is best calibrated in the 5-10% range based on calibration curve
+            let category, label, description, colorClass, displayRisk;
+            if (probability < 0.05) {
+                category = 'low';
+                label = 'Low Risk';
+                description = 'Less than 5% predicted major bleeding risk';
+                colorClass = 'low';
+                displayRisk = '<5%';
+            } else if (probability < 0.10) {
+                category = 'medium';
+                label = 'Moderate Risk';
+                description = '5-10% predicted major bleeding risk';
+                colorClass = 'medium';
+                displayRisk = riskPercent + '%';
+            } else {
+                category = 'high';
+                label = 'High Risk';
+                description = 'Greater than 10% predicted major bleeding risk';
+                colorClass = 'high';
+                displayRisk = '>10%';
+            }
+            
+            // Display result
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result show ' + colorClass;
+            document.getElementById('riskValue').textContent = displayRisk;
+            document.getElementById('riskLabel').textContent = label;
+            document.getElementById('riskDescription').textContent = description;
+        }
+    </script>
+</body>
+</html>
